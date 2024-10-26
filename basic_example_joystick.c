@@ -4,6 +4,9 @@
 
 
 #define LEFT_THRESHOLD  1500
+#define RIGHT_THRESHOLD 12500
+#define DOWN_THRESHOLD 1500
+#define UP_THRESHOLD 12500
 
 
 
@@ -33,14 +36,28 @@ int main(void)
         getSampleJoyStick(&vx, &vy);
         bool joyStickPushedtoRight = false;
         bool joyStickPushedtoLeft = false;
+        bool joyStickPushedtoUp = false;
+        bool joyStickPushedtoDown = false;
         drawXY(&g_sContext, vx, vy);
 
         if (vx < LEFT_THRESHOLD)
         {
             joyStickPushedtoLeft = true;
         }
-
+        if (vx > RIGHT_THRESHOLD)
+        {
+            joyStickPushedtoRight = true;
+        }
+        if (vy < DOWN_THRESHOLD)
+        {
+            joyStickPushedtoDown = true;
+        }
+        if (vy > UP_THRESHOLD)
+        {
+            joyStickPushedtoUp = true;
+        }
         MoveCircle(&g_sContext, joyStickPushedtoLeft,joyStickPushedtoRight);
+        MoveCircle(&g_sContext, joyStickPushedtoDown,joyStickPushedtoUp);
      }
 }
 
@@ -72,6 +89,7 @@ void initADC() {
     // in ADC_MEM0 for joystick X.
     // Todo: if we want to add joystick Y, then, we have to use more memory locations
     ADC14_configureMultiSequenceMode(ADC_MEM0, ADC_MEM0, true);
+    ADC14_configureMultiSequenceMode(ADC_MEM1, ADC_MEM1, true);
 
     // This configures the ADC in manual conversion mode
     // Software will start each conversion.
@@ -110,13 +128,20 @@ void initJoyStick() {
                                                GPIO_TERTIARY_MODULE_FUNCTION);
 
     // TODO: add joystick Y
+    ADC14_configureConversionMemory(ADC_MEM1,
+                                     ADC_VREFPOS_AVCC_VREFNEG_VSS,
+                                     ADC_INPUT_A9,                 // joystick X
+                                     ADC_NONDIFFERENTIAL_INPUTS);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4,
+                                                   GPIO_PIN4,
+                                                   GPIO_TERTIARY_MODULE_FUNCTION);
 
 }
 
 void getSampleJoyStick(unsigned *X, unsigned *Y) {
     // ADC runs in continuous mode, we just read the conversion buffers
     *X = ADC14_getResult(ADC_MEM0);
-
+    *Y = ADC14_getResult(ADC_MEM1);
     // TODO: Read the Y channel
 }
 
